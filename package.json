@@ -45,19 +45,19 @@
     "publish": "pnpm build && pnpm release"
   },
   "devDependencies": {
-    "@types/node": "^20.6.3",
-    "autoprefixer": "^10.4.16",
-    "concurrently": "^8.2.1",
-    "postcss": "^8.4.31",
-    "postcss-load-config": "^4.0.1",
-    "release-it": "^16.1.5",
-    "sass": "^1.77.0",
-    "typescript": "^5.2.2",
-    "vite": "^4.4.9",
-    "vite-plugin-dts": "^3.5.3",
-    "vite-plugin-solid": "^2.7.0"
+    "@types/node": "^20.14.15",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.41",
+    "postcss-load-config": "^4.0.2",
+    "release-it": "^16.3.0",
+    "sass": "^1.77.8",
+    "typescript": "^5.5.4",
+    "vite": "^4.5.3",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-plugin-solid": "^2.10.2"
   },
   "peerDependencies": {
-    "solid-js": "^1.7.12"
+    "solid-js": "^1.8.21"
   }
 }

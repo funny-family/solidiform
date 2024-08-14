@@ -34,7 +34,6 @@ export default defineConfig({
         globals: {
           'solid-js': 'solidJs',
         },
-        assetFileNames: 'styles/styles.css',
       },
     },
     emptyOutDir: false,
