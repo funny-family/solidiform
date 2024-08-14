@@ -1,0 +1,63 @@
+{
+  "name": "solidiform",
+  "private": false,
+  "version": "1.0.1",
+  "description": "",
+  "author": "funny-family <https://github.com/funny-family>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/funny-family/solidiform.git"
+  },
+  "homepage": "https://github.com/funny-family/solidiform#readme",
+  "bugs": {
+    "url": "https://github.com/funny-family/solidiform/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "solid",
+    "solid-js",
+    "solidiform",
+    "form",
+    "forms",
+    "hook",
+    "hooks"
+  ],
+  "type": "module",
+  "types": "./dist/types/index.d.ts",
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "concurrently \"rm -rf ./dist\" \"pnpm build:watch\"",
+    "vite:build": "vite build",
+    "build": "./scripts/build.sh",
+    "build:watch": "vite build --watch",
+    "release": "release-it",
+    "publish": "pnpm build && pnpm release"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.1",
+    "postcss": "^8.4.31",
+    "postcss-load-config": "^4.0.1",
+    "release-it": "^16.1.5",
+    "sass": "^1.77.0",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.5.3",
+    "vite-plugin-solid": "^2.7.0"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.7.12"
+  }
+}

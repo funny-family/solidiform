@@ -1,0 +1,26 @@
+{
+  "typescript.tsserver.log": "verbose",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.exclude": {
+    "node_modules/": false
+  },
+  "files.eol": "\n",
+  "eslint.format.enable": true,
+  "eslint.enable": true,
+  "eslint.nodePath": "./node_modules",
+  "eslint.options": {
+    "extensions": [".html", ".js", ".ts", ".jsx", ".tsx"]
+  },
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "html",
+    "javascriptreact",
+    "typescriptreact"
+  ],
+  "cSpell.words": ["solidiform"]
+}
