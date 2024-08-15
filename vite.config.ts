@@ -5,8 +5,9 @@ import url from 'node:url';
 import pkg from './package.json';
 import tsconfig from './tsconfig.json';
 
-const resolvePath = (p: string) =>
-  url.fileURLToPath(new URL(p, import.meta.url));
+var resolvePath = (p: string) => {
+  return url.fileURLToPath(new URL(p, import.meta.url));
+};
 
 export default defineConfig({
   publicDir: false,
@@ -20,6 +21,11 @@ export default defineConfig({
       extensions: ['js', 'jsx', 'ts', 'tsx'],
     }),
   ],
+  resolve: {
+    alias: {
+      '@src': resolvePath('./src/'),
+    },
+  },
   build: {
     target: tsconfig.compilerOptions.target,
     outDir: resolvePath('./dist'),
