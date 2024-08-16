@@ -1,0 +1,11 @@
+@scope (.base-form) {
+  :scope {
+    width: 500px;
+  }
+
+  .base-form__fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

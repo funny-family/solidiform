@@ -1,0 +1,21 @@
+@scope (.nested-form) {
+  :scope {
+    width: 500px;
+  }
+
+  .nested-form__fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .contacts-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .contacts-form__delete-button {
+    width: fit-content;
+  }
+}
