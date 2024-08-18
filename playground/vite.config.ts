@@ -27,13 +27,14 @@ export default defineConfig({
     //   extensions: ['js', 'jsx', 'ts', 'tsx'],
     // }),
     solidPlugin({
-      // include: ['./src/**/*'],
-      extensions: ['js', 'jsx', 'ts', 'tsx'],
+      // include: ['./src/*', resolvePath('../src/*')],
+      // extensions: ['js', 'jsx', 'ts', 'tsx'],
     }),
   ],
   resolve: {
     alias: {
       '@src': resolvePath('./src/'),
+      '@lib': resolvePath('../src/'),
     },
   },
   build: {
