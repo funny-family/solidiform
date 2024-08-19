@@ -31,25 +31,25 @@ export var Nested = () => {
           <input
             type="text"
             placeholder="First name"
-            name={firstNameField()?.name!}
-            value={lastNameField()?.getValue?.()}
+            name={firstNameField().name}
+            value={lastNameField().getValue()}
             onBlur={() => {
-              firstNameField()?.onBlur?.();
+              firstNameField().onBlur();
             }}
             onChange={(event) => {
-              firstNameField()?.onChange?.(event.target.value);
+              firstNameField().onChange(event.target.value);
             }}
           />
           <input
             type="text"
             placeholder="Last name"
-            name={lastNameField()?.name!}
-            value={lastNameField()?.getValue?.()}
+            name={lastNameField().name}
+            value={lastNameField().getValue()}
             onBlur={() => {
-              lastNameField()?.onBlur?.();
+              lastNameField().onBlur();
             }}
             onChange={(event) => {
-              lastNameField()?.onChange?.(event.target.value);
+              lastNameField().onChange(event.target.value);
             }}
           />
           {/* <button
@@ -95,43 +95,39 @@ export var Nested = () => {
                     <input
                       type="text"
                       placeholder="Phone number"
-                      name={`${field['phone-number']?.()?.name!}`}
-                      value={field['phone-number']?.()?.getValue?.()}
+                      name={`${field['phone-number']().name}`}
+                      value={field['phone-number']().getValue()}
                       onBlur={() => {
-                        field['phone-number']?.()?.onBlur?.();
+                        field['phone-number']().onBlur();
                       }}
                       onChange={(event) => {
-                        field['phone-number']?.()?.onChange?.(
-                          event.target.value
-                        );
+                        field['phone-number']().onChange(event.target.value);
                       }}
                     />
                     <input
                       type="text"
                       placeholder="WhatsApp login"
-                      name={field['phone-number']?.()?.name!}
-                      value={field['phone-number']?.()?.getValue?.()}
+                      name={field['phone-number']().name}
+                      value={field['phone-number']().getValue()}
                       onBlur={() => {
-                        field['phone-number']?.()?.onBlur?.();
+                        field['phone-number']().onBlur();
                       }}
                       onChange={(event) => {
-                        field['phone-number']?.()?.onChange?.(
-                          event.target.value
-                        );
+                        field['phone-number']().onChange(event.target.value);
                       }}
                     />
                     <div>
                       <label for="hshg6745">24/7 available</label>
                       <input
                         type="checkbox"
-                        id="hshg6745"
-                        name={field['agree']?.()?.name!}
-                        checked={field['agree']?.()?.getValue?.()}
+                        id="hshg6745"?.
+                        name={field['agree']().name}
+                        checked={field['agree']().getValue()}
                         onBlur={() => {
-                          field['agree']?.onBlur?.();
+                          field['agree']().onBlur();
                         }}
                         onChange={(event) => {
-                          field['agree']?.()?.onChange?.(event.target.checked);
+                          field['agree']().onChange(event.target.checked);
                         }}
                       />
                     </div>
