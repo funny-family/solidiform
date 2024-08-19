@@ -1,7 +1,7 @@
 import { batch } from 'solid-js';
 import { createMutable } from 'solid-js/store';
 import { ReactiveMap } from '@src/utils/reactive-map.util';
-import { object_fromEntries } from '@src/utils/object.util';
+import { Object_fromEntries } from '@src/utils/object.util';
 import type { createForm } from '@src/core/create-form';
 import {
   FIELDS_MAP,
@@ -33,11 +33,11 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
   var touchedFieldsMap = new ReactiveMap<string, boolean>();
 
   var getDirtyFields = () => {
-    return object_fromEntries(dirtyFieldsMap);
+    return Object_fromEntries(dirtyFieldsMap);
   };
 
   var getTouchedFields = () => {
-    return object_fromEntries(touchedFieldsMap);
+    return Object_fromEntries(touchedFieldsMap);
   };
 
   var getFieldState = (fieldName: string) => {
@@ -84,8 +84,8 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
       touchedFieldsMap.set(fieldName, false);
     });
 
-    var onBlur = field.onBlur!;
-    var onChange = field.onChange!;
+    var onBlur = field.onBlur;
+    var onChange = field.onChange;
 
     var updatedField = {
       name: field.name,

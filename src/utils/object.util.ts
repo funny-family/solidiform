@@ -1,1 +1,1 @@
-export var object_fromEntries = Object.fromEntries;
+export var Object_fromEntries = Object.fromEntries;
