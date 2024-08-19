@@ -3,11 +3,11 @@ import type { ReversIterableArray } from '@src/utils/revers-iterable-array.util'
 import type { SUBMIT_QUEUE } from './create-form.symbols';
 
 export type Field = {
-  name: string | null;
-  getValue: (() => any) | null;
-  setValue: Setter<any> | null;
-  onBlur: (() => void) | null;
-  onChange: ((fieldValue: any) => void) | null;
+  name: string;
+  getValue: () => any;
+  setValue: Setter<any> | ((fieldValue: any) => any);
+  onBlur: () => void;
+  onChange: (fieldValue: any) => void;
 };
 
 export type PromiseQueue = ReversIterableArray<Promise<any>>;
