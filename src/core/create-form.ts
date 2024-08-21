@@ -1,4 +1,4 @@
-import { batch, createSignal, type Setter } from 'solid-js';
+import { batch, createMemo, createSignal, type Setter } from 'solid-js';
 import { ReactiveMap } from '../utils/reactive-map.util';
 import { ReversIterableArray } from '../utils/revers-iterable-array.util';
 import { Object_fromEntries } from '../utils/object.util';
@@ -48,11 +48,23 @@ export var createForm = () => {
 
     var map = fieldsMap.set(fieldName, field);
 
-    return () => {
-      return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
+    var memoizeField = (
+      _fieldsMap: typeof fieldsMap,
+      _nullableFieldsMap: typeof nullableFieldsMap,
+      _createMemo: typeof createMemo
+    ) => {
+      return _createMemo(() => {
+        return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
+      });
     };
+
+    return memoizeField(map, nullableFieldsMap, createMemo);
   };
 
+  // /**
+  //  * @param {string} fieldName Form`s field that has been registered.
+  //  * @param {Map<'keepDefaultValue', boolean>} option
+  //  */
   var unregister = function (
     this: {
       onCleanup?: () => void;
@@ -124,7 +136,14 @@ export var createForm = () => {
   };
 
   var getValues = () => {
-    return Object_fromEntries(fieldsMap);
+    var fieldsEntries = Array(fieldsMap.size);
+
+    var i = 0;
+    fieldsMap.forEach((field, key) => {
+      fieldsEntries[i++] = [key, field.getValue!()];
+    });
+
+    return Object_fromEntries(fieldsEntries);
   };
 
   var getDefaultValue = (fieldName: string) => {
