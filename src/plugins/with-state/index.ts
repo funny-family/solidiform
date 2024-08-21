@@ -200,13 +200,17 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
       }
 
       if (keepValues === false) {
-        form.reset();
+        var formReset = form.reset as Function;
+
+        if (formReset.length > 0) {
+          formReset(option);
+        } else {
+          formReset();
+        }
       }
 
-      batch(() => {
-        state.isSubmitted = false;
-        state.isSubmitSuccessful = false;
-      });
+      state.isSubmitted = false;
+      state.isSubmitSuccessful = false;
     });
   };
 
@@ -268,7 +272,14 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
       return form.getValue(fieldName);
     }
 
-    var value = form.resetField(fieldName)!;
+    var formResetField = form.resetField as Function;
+
+    // prettier-ignore
+    var value = (
+      formResetField.length > 0
+        ? formResetField(fieldName, option)
+        : formResetField(fieldName)
+    );
 
     return value();
   };
