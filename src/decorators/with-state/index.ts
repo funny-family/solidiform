@@ -75,9 +75,11 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
   });
 
   var register = (fieldName: string, fieldValue: any) => {
-    form.register(fieldName, fieldValue);
+    var getField = form.register(fieldName, fieldValue);
+    var field = getField();
 
-    var field = fieldsMap.get(fieldName, false)!;
+    // form.register(fieldName, fieldValue)
+    // var field = fieldsMap.get(fieldName, false)!;
 
     batch(() => {
       dirtyFieldsMap.set(fieldName, false);
@@ -107,13 +109,20 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
       },
     };
 
-    var map = fieldsMap.set(fieldName, updatedField);
+    fieldsMap.set(fieldName, updatedField);
 
-    return () => {
-      return map.get(fieldName) || nullableFieldsMap.get(fieldName);
-    };
+    // var map = fieldsMap.set(fieldName, updatedField);
+
+    // return () => {
+    //   return map.get(fieldName) || nullableFieldsMap.get(fieldName);
+    // };
+
+    return getField;
   };
 
+  // /**
+  //  * @extends {TForm.unregister}
+  //  */
   var unregister = function (
     this: {
       onCleanup?: () => void;
