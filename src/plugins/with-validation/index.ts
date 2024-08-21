@@ -119,7 +119,7 @@ export var withValidation = <TForm extends ReturnType<typeof createForm>>(
     var keepIsValid = option?.keepIsValid || false;
 
     var formReset = form.reset as Function;
- 
+
     validation.isValid = false;
 
     if (keepIsValid) {
