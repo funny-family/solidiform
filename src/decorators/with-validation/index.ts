@@ -69,9 +69,11 @@ export var withValidation = <TForm extends ReturnType<typeof createForm>>(
   });
 
   var register = (fieldName: string, fieldValue: any) => {
-    form.register(fieldName, fieldValue)();
+    var getField = form.register(fieldName, fieldValue);
+    var field = getField();
 
-    var field = fieldsMap.get(fieldName)!;
+    // form.register(fieldName, fieldValue);
+    // var field = fieldsMap.get(fieldName)!;
 
     errorMessagesMap.set(fieldName, '');
 
@@ -90,11 +92,15 @@ export var withValidation = <TForm extends ReturnType<typeof createForm>>(
       },
     };
 
-    var map = fieldsMap.set(fieldName, updatedField);
+    fieldsMap.set(fieldName, updatedField);
 
-    return () => {
-      return map.get(fieldName) || nullableFieldsMap.get(fieldName);
-    };
+    // var map = fieldsMap.set(fieldName, updatedField);
+
+    // return () => {
+    //   return map.get(fieldName) || nullableFieldsMap.get(fieldName);
+    // };
+
+    return getField;
   };
 
   // var unregister = (fieldName: string) => {
