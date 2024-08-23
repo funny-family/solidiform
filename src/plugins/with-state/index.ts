@@ -24,6 +24,7 @@ import {
 import { DIRTY_FIELDS_MAP, TOUCHED_FIELDS_MAP } from './symbols';
 
 export var withState = <TForm extends ReturnType<typeof createForm>>(
+  // <TForm extends infer TForm ? Fn : ReturnType<typeof createForm>>
   form: TForm
 ) => {
   var fieldsMap = form[FIELDS_MAP] as ReactiveMap<string, Field>;
@@ -74,8 +75,9 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     getTouchedFields,
   });
 
+  var form_register = form.register;
   var register = (fieldName: string, fieldValue: any) => {
-    var getField = form.register(fieldName, fieldValue);
+    var getField = form_register(fieldName, fieldValue);
     var field = getField();
 
     // form.register(fieldName, fieldValue)
@@ -120,15 +122,21 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     return getField;
   };
 
+  type Unregister = typeof form.unregister;
+  type GetReturnType<Type> = Type extends (...args: infer _Args) => infer Return
+    ? Return
+    : never;
+
   // /**
   //  * @extends {TForm.unregister}
   //  */
+  var form_unregister = form.unregister;
   var unregister = function (
     this: {
       onCleanup?: () => void;
     },
     fieldName: Parameters<TForm['unregister']>[0],
-    option: Parameters<TForm['unregister']>[1] & {
+    option: Parameters<Unregister>[1] & {
       keepFormDirty?: boolean;
       keepFormTouched?: boolean;
     }
@@ -136,7 +144,7 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     var keepFormDirty = option?.keepFormDirty || false;
     var keepFormTouched = option?.keepFormTouched || false;
 
-    var formUnregister = form.unregister.bind({
+    var formUnregister = form_unregister.bind({
       onCleanup: () => {
         dirtyFieldsMap.delete(fieldName);
         touchedFieldsMap.delete(fieldName);
@@ -167,6 +175,7 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     return formUnregister(fieldName, option);
   };
 
+  var form_reset = form.reset as Function;
   var reset = (option?: {
     keepDirty?: boolean;
     keepTouched?: boolean;
@@ -200,12 +209,10 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
       }
 
       if (keepValues === false) {
-        var formReset = form.reset as Function;
-
-        if (formReset.length > 0) {
-          formReset(option);
+        if (form_reset.length > 0) {
+          form_reset(option);
         } else {
-          formReset();
+          form_reset();
         }
       }
 
@@ -214,6 +221,8 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     });
   };
 
+  var form_getValue = form.getValue;
+  var form_resetField = form.resetField as Function;
   var resetField = (
     fieldName: string,
     option?: {
@@ -269,23 +278,22 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     });
 
     if (keepValue) {
-      return form.getValue(fieldName);
+      return form_getValue(fieldName);
     }
-
-    var formResetField = form.resetField as Function;
 
     // prettier-ignore
     var value = (
-      formResetField.length > 0
-        ? formResetField(fieldName, option)
-        : formResetField(fieldName)
+      form_resetField.length > 0
+        ? form_resetField(fieldName, option)
+        : form_resetField(fieldName)
     );
 
     return value();
   };
 
+  var form_submit = form.submit;
   var submit: SubmitFunction = (event) => {
-    var _submitter = form.submit(event);
+    var _submitter = form_submit(event);
     var queue = _submitter[SUBMIT_QUEUE];
 
     state.isSubmitting = true;
