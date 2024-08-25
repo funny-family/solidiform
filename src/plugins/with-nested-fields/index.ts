@@ -12,7 +12,9 @@ export var withNestedFields = <TForm extends ReturnType<typeof createForm>>(
 ) => {
   type GetValues = typeof form.getValues;
   var form_getValues = form.getValues as Function;
-  var getValues = ((option?: { useNesting: boolean }) => {
+  var getValues = ((option?: {
+    useNesting: boolean;
+  }): ReturnType<GetValues> => {
     if (form_getValues.length > 0) {
       return form_getValues(option);
     }
