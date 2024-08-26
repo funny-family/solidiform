@@ -7,6 +7,26 @@ import { ReactiveMap } from '@src/utils/reactive-map.util';
 // https://stackoverflow.com/questions/18936915/dynamically-set-property-of-nested-object
 // https://vee-validate.logaretm.com/v4/guide/composition-api/nested-objects-and-arrays/
 
+// https://stackoverflow.com/a/68966700
+
+// export var isArrayIndex = (value: unknown): value is number => {
+//   return Number(value) >= 0;
+// };
+
+export var isIndex = (value: unknown): value is number => {
+  if (value === '') {
+    return false;
+  }
+
+  var maybeNumber = Number(value);
+
+  if (Number.isNaN(maybeNumber)) {
+    return false;
+  }
+
+  return maybeNumber >= 0;
+};
+
 export var withNestedFields = <TForm extends ReturnType<typeof createForm>>(
   form: TForm
 ) => {
@@ -15,11 +35,14 @@ export var withNestedFields = <TForm extends ReturnType<typeof createForm>>(
   var getValues = ((option?: {
     useNesting: boolean;
   }): ReturnType<GetValues> => {
-    if (form_getValues.length > 0) {
-      return form_getValues(option);
-    }
+    // prettier-ignore
+    var value = (
+      form_getValues.length > 0
+        ? form_getValues(option)
+        : form_getValues()
+    );
 
-    return form_getValues();
+    return value;
   }) satisfies GetValues;
 
   return {
