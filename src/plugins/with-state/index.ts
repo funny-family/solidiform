@@ -144,35 +144,37 @@ export var withState = <TForm extends ReturnType<typeof createForm>>(
     var keepFormDirty = option?.keepFormDirty || false;
     var keepFormTouched = option?.keepFormTouched || false;
 
-    var formUnregister = form_unregister.bind({
-      onCleanup: () => {
-        dirtyFieldsMap.delete(fieldName);
-        touchedFieldsMap.delete(fieldName);
+    return form_unregister.call(
+      {
+        onCleanup: () => {
+          dirtyFieldsMap.delete(fieldName);
+          touchedFieldsMap.delete(fieldName);
 
-        if (keepFormDirty) {
-          state.isDirty = true;
-        } else {
-          if (dirtyFieldsMap.size === 0) {
-            state.isDirty = false;
+          if (keepFormDirty) {
+            state.isDirty = true;
+          } else {
+            if (dirtyFieldsMap.size === 0) {
+              state.isDirty = false;
+            }
           }
-        }
 
-        if (keepFormTouched) {
-          state.isTouched = true;
-        } else {
-          if (touchedFieldsMap.size === 0) {
-            state.isTouched = false;
+          if (keepFormTouched) {
+            state.isTouched = true;
+          } else {
+            if (touchedFieldsMap.size === 0) {
+              state.isTouched = false;
+            }
           }
-        }
 
-        var cleanup = this?.onCleanup;
-        if (cleanup != null) {
-          cleanup();
-        }
+          var cleanup = this?.onCleanup;
+          if (cleanup != null) {
+            cleanup();
+          }
+        },
       },
-    });
-
-    return formUnregister(fieldName, option);
+      fieldName,
+      option
+    );
   };
 
   var form_reset = form.reset as Function;
