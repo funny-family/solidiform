@@ -10,7 +10,8 @@ export type Field = {
   onChange: (fieldValue: any) => void;
 };
 
-export type PromiseQueue = ReversIterableArray<Promise<any>>;
+// export type PromiseQueue = ReversIterableArray<Promise<any>>;
+export type PromiseQueue = Set<Promise<any>>;
 
 export interface SubmitterFunction extends Function {
   [SUBMIT_QUEUE]: PromiseQueue;

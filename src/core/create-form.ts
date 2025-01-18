@@ -1,6 +1,11 @@
-import { batch, createMemo, createSignal, type Setter } from 'solid-js';
+import {
+  type Accessor,
+  batch,
+  createMemo,
+  createSignal,
+  type Setter,
+} from 'solid-js';
 import { ReactiveMap } from '../utils/reactive-map.util';
-import { ReversIterableArray } from '../utils/revers-iterable-array.util';
 import { Object_fromEntries } from '../utils/object.util';
 import type {
   Field,
@@ -20,12 +25,45 @@ import {
   nullableField_setValue,
 } from './utils';
 
+export type CreateFormReturnRecord = {
+  // @ts-expect-error
+  [FIELDS_MAP]: ReactiveMap<string, Field>;
+  // @ts-expect-error
+  [DEFAULT_VALUES_MAP]: ReactiveMap<string, any>;
+  // @ts-expect-error
+  [NULLABLE_FIELDS_MAP]: Map<string, Field>;
+  register: (fieldName: string, fieldValue: any) => Accessor<Field>;
+  unregister: (
+    this: {
+      onCleanup?: () => void;
+    },
+    fieldName: string,
+    option?: {
+      keepDefaultValue?: boolean;
+    }
+  ) => boolean;
+  setValue: (fieldName: string, fieldValue: any) => any;
+  getValue: (fieldName: string) => any;
+  getValues: () => Record<string, any>;
+  getDefaultValue: (fieldName: string) => any;
+  getDefaultValues: () => Record<string, any>;
+  getRegisteredField: (fieldName: string) => Field | undefined;
+  getRegisteredFields: () => Field[];
+  reset: () => void;
+  resetField: (fieldName: string) => any;
+  submit: SubmitFunction;
+};
+
 export var createForm = () => {
   var fieldsMap = new ReactiveMap<string, Field>();
   var nullableFieldsMap = new Map<string, Field>();
   var defaultValuesMap = new ReactiveMap<string, any>();
+  const returnValuesMap = new Map<string | symbol, any>();
 
-  var register = (fieldName: string, fieldValue: any) => {
+  var register: CreateFormReturnRecord['register'] = (
+    fieldName,
+    fieldValue
+  ) => {
     var { 0: value, 1: setValue } = createSignal(fieldValue);
 
     defaultValuesMap.set(fieldName, fieldValue);
@@ -61,18 +99,9 @@ export var createForm = () => {
     return memoizeField(map, nullableFieldsMap, createMemo);
   };
 
-  // /**
-  //  * @param {string} fieldName Form`s field that has been registered.
-  //  * @param {Map<'keepDefaultValue', boolean>} option
-  //  */
-  var unregister = function (
-    this: {
-      onCleanup?: () => void;
-    },
-    fieldName: string,
-    option?: {
-      keepDefaultValue?: boolean;
-    }
+  var unregister: CreateFormReturnRecord['unregister'] = function (
+    fieldName,
+    option
   ) {
     var keepDefaultValue = option?.keepDefaultValue || false;
 
@@ -119,7 +148,10 @@ export var createForm = () => {
     return true;
   };
 
-  var setValue = (fieldName: string, fieldValue: any) => {
+  var setValue: CreateFormReturnRecord['setValue'] = (
+    fieldName,
+    fieldValue
+  ) => {
     var field = fieldsMap.get(fieldName);
 
     if (field == null) {
@@ -131,11 +163,11 @@ export var createForm = () => {
     return value();
   };
 
-  var getValue = (fieldName: string) => {
+  var getValue: CreateFormReturnRecord['getValue'] = (fieldName) => {
     return fieldsMap.get(fieldName)?.getValue();
   };
 
-  var getValues = () => {
+  var getValues: CreateFormReturnRecord['getValues'] = () => {
     var fieldsEntries = Array(fieldsMap.size);
 
     var i = 0;
@@ -146,36 +178,41 @@ export var createForm = () => {
     return Object_fromEntries(fieldsEntries);
   };
 
-  var getDefaultValue = (fieldName: string) => {
+  var getDefaultValue: CreateFormReturnRecord['getDefaultValue'] = (
+    fieldName
+  ) => {
     return defaultValuesMap.get(fieldName);
   };
 
-  var getDefaultValues = () => {
+  var getDefaultValues: CreateFormReturnRecord['getDefaultValues'] = () => {
     return Object_fromEntries(defaultValuesMap);
   };
 
-  var getRegisteredField = (fieldName: string) => {
+  var getRegisteredField: CreateFormReturnRecord['getRegisteredField'] = (
+    fieldName
+  ) => {
     return fieldsMap.get(fieldName);
   };
 
-  var getRegisteredFields = () => {
-    var fields = Array<Field>(fieldsMap.size);
+  var getRegisteredFields: CreateFormReturnRecord['getRegisteredFields'] =
+    () => {
+      var fields = Array<Field>(fieldsMap.size);
 
-    var i = 0;
-    fieldsMap.forEach((field) => {
-      fields[i++] = field;
-    });
+      var i = 0;
+      fieldsMap.forEach((field) => {
+        fields[i++] = field;
+      });
 
-    return fields;
-  };
+      return fields;
+    };
 
-  var reset = () => {
+  var reset: CreateFormReturnRecord['reset'] = () => {
     fieldsMap.forEach((field, key) => {
       field.setValue(defaultValuesMap.get(key));
     });
   };
 
-  var resetField = (fieldName: string) => {
+  var resetField: CreateFormReturnRecord['resetField'] = (fieldName) => {
     const defaultFieldValue = defaultValuesMap.get(fieldName, false);
     const field = fieldsMap.get(fieldName, false);
 
@@ -188,133 +225,38 @@ export var createForm = () => {
     return field.setValue(defaultFieldValue);
   };
 
-  var submit: SubmitFunction = (event) => {
+  var submit: CreateFormReturnRecord['submit'] = (event) => {
     event.preventDefault();
 
-    var queue = new ReversIterableArray<Promise<any>>();
+    var queue = new Set<Promise<any>>();
 
-    var submitter = (async (onSubmit) => {
-      await Promise.all(queue);
+    var submitter: SubmitterFunction = async (onSubmit) => {
+      if (queue.size > 0) {
+        await Promise.all(Array.from(queue).toReversed());
+      }
+
       await onSubmit(event);
-
-      // try {
-      //   await Promise.all(queue);
-      //   await onSubmit(event);
-      // } catch (error) {
-      //   throw undefined;
-      // } finally {
-      //   //
-      // }
-    }) as SubmitterFunction;
+    };
 
     submitter[SUBMIT_QUEUE] = queue;
 
     return submitter;
   };
 
-  return {
-    [FIELDS_MAP]: fieldsMap,
-    [DEFAULT_VALUES_MAP]: defaultValuesMap,
-    [NULLABLE_FIELDS_MAP]: nullableFieldsMap,
-    setValue,
-    getValue,
-    getValues,
-    getDefaultValue,
-    getDefaultValues,
-    getRegisteredField,
-    getRegisteredFields,
-    register,
-    unregister,
-    reset,
-    resetField,
-    submit,
-  };
+  return returnValuesMap
+    .set(FIELDS_MAP, fieldsMap)
+    .set(DEFAULT_VALUES_MAP, defaultValuesMap)
+    .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
+    .set('setValue', setValue)
+    .set('getValue', getValue)
+    .set('getValues', getValues)
+    .set('getDefaultValue', getDefaultValue)
+    .set('getDefaultValues', getDefaultValues)
+    .set('getRegisteredField', getRegisteredField)
+    .set('getRegisteredFields', getRegisteredFields)
+    .set('register', register)
+    .set('unregister', unregister)
+    .set('reset', reset)
+    .set('resetField', resetField)
+    .set('submit', submit);
 };
-
-/*
-> %DebugPrint(map1)
-DebugPrint: 0x25c10007b601: [JSMap] in OldSpace
- - map: 0x358034978871 <Map[32](HOLEY_ELEMENTS)> [FastProperties]
- - prototype: 0x3580349788b9 <Object map = 0x358034976921>
- - elements: 0x327c2b200c31 <FixedArray[0]> [HOLEY_ELEMENTS]
- - table: 0x25c100078ec1 <OrderedHashMap[17]>
- - properties: 0x327c2b200c31 <FixedArray[0]>
- - All own properties (excluding elements): {}
-0x358034978871: [Map] in OldSpace
- - map: 0x04ea371411a1 <MetaMap (0x04ea37141231 <NativeContext[287]>)>
- - type: JS_MAP_TYPE
- - instance size: 32
- - inobject properties: 0
- - unused property fields: 0
- - elements kind: HOLEY_ELEMENTS
- - enum length: 0
- - back pointer: 0x327c2b200069 <undefined>
- - prototype_validity cell: 0x327c2b201249 <Cell value= 1>
- - instance descriptors (own) #0: 0x327c2b200c91 <DescriptorArray[0]>
- - prototype: 0x3580349788b9 <Object map = 0x358034976921>
- - constructor: 0x01271db5e059 <JSFunction Map (sfi = 0x327c2b218b41)>
- - dependent code: 0x327c2b200c51 <Other heap object (WEAK_ARRAY_LIST_TYPE)>
- - construction counter: 0
-
- ===========================================================================================
-
- var obj = {};
- > obj.value = '345353';
-'345353'
-> %DebugPrint(obj)
-DebugPrint: 0x1348754e8239: [JS_OBJECT_TYPE] in OldSpace
- - map: 0x125f7b0e0df9 <Map[56](HOLEY_ELEMENTS)> [FastProperties]
- - prototype: 0x358034949541 <Object map = 0x4ea37141bd1>
- - elements: 0x327c2b200c31 <FixedArray[0]> [HOLEY_ELEMENTS]
- - properties: 0x327c2b200c31 <FixedArray[0]>
- - All own properties (excluding elements): {
-    0x327c2b201859: [String] in ReadOnlySpace: #value: 0x125f7b0e0639 <String[6]: #345353> (const data field 0), location: in-object
- }
-0x125f7b0e0df9: [Map] in OldSpace
- - map: 0x04ea371411a1 <MetaMap (0x04ea37141231 <NativeContext[287]>)>
- - type: JS_OBJECT_TYPE
- - instance size: 56
- - inobject properties: 4
- - unused property fields: 3
- - elements kind: HOLEY_ELEMENTS
- - enum length: invalid
- - stable_map
- - back pointer: 0x04ea371533d9 <Map[56](HOLEY_ELEMENTS)>
- - prototype_validity cell: 0x01271db6b7f1 <Cell value= 0>
- - instance descriptors (own) #1: 0x24bd789e3b89 <DescriptorArray[1]>
- - prototype: 0x358034949541 <Object map = 0x4ea37141bd1>
- - constructor: 0x04ea371530d1 <JSFunction Object (sfi = 0x327c2b210a01)>
- - dependent code: 0x327c2b200c51 <Other heap object (WEAK_ARRAY_LIST_TYPE)>
- - construction counter: 0
-
- ===========================================================================================
-
- var ttt =Object.create(null)
- ttt.value = 35476;
- > %DebugPrint(ttt)
-DebugPrint: 0x135ff9881df9: [JS_OBJECT_TYPE] in OldSpace
- - map: 0x04ea37143789 <Map[24](HOLEY_ELEMENTS)> [DictionaryProperties]
- - prototype: 0x327c2b200099 <null>
- - elements: 0x327c2b200c31 <FixedArray[0]> [HOLEY_ELEMENTS]
- - properties: 0x125f7b0fabd1 <NameDictionary[18]>
- - All own properties (excluding elements): {
-   value: 35476 (data, dict_index: 1, attrs: [WEC])
- }
-0x4ea37143789: [Map] in OldSpace
- - map: 0x04ea371411a1 <MetaMap (0x04ea37141231 <NativeContext[287]>)>
- - type: JS_OBJECT_TYPE
- - instance size: 24
- - inobject properties: 0
- - unused property fields: 0
- - elements kind: HOLEY_ELEMENTS
- - enum length: invalid
- - dictionary_map
- - may_have_interesting_properties
- - back pointer: 0x327c2b200069 <undefined>
- - prototype_validity cell: 0x327c2b201249 <Cell value= 1>
- - instance descriptors (own) #0: 0x327c2b200c91 <DescriptorArray[0]>
- - prototype: 0x327c2b200099 <null>
- - constructor: 0x04ea371530d1 <JSFunction Object (sfi = 0x327c2b210a01)>
- - dependent code: 0x327c2b200c51 <Other heap object (WEAK_ARRAY_LIST_TYPE)>
- - construction counter: 0
-*/
