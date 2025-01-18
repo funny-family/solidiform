@@ -3,6 +3,16 @@ import { lazy } from 'solid-js';
 
 export var routes = [
   {
+    path: '/',
+    component: () => {
+      var navigate = useNavigate();
+
+      navigate('/base');
+
+      return null;
+    },
+  },
+  {
     path: '/base',
     component: lazy(() => {
       return import('@src/app/pages/base/base.component').then((module) => {
