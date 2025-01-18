@@ -8,4 +8,17 @@
     flex-direction: column;
     gap: 10px;
   }
+
+  .input {
+    display: flex;
+    align-items: center;
+  }
+
+  .input__field {
+    width: 100%;
+  }
+
+  .input__reset-button {
+    height: min-content;
+  }
 }
