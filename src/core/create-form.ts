@@ -68,7 +68,7 @@ export var createForm = () => {
 
     defaultValuesMap.set(fieldName, fieldValue);
 
-    var field: any = {
+    var field = {
       name: fieldName,
       getValue: value,
       setValue: (fieldValue: Setter<any>) => {
@@ -86,17 +86,13 @@ export var createForm = () => {
 
     var map = fieldsMap.set(fieldName, field);
 
-    var memoizeField = (
-      _fieldsMap: typeof fieldsMap,
-      _nullableFieldsMap: typeof nullableFieldsMap,
-      _createMemo: typeof createMemo
-    ) => {
-      return _createMemo(() => {
-        return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
-      });
-    };
+    return createMemo(() => {
+      return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
+    });
 
-    return memoizeField(map, nullableFieldsMap, createMemo);
+    // return () => {
+    //   return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
+    // };
   };
 
   var unregister: CreateFormReturnRecord['unregister'] = function (
@@ -168,14 +164,14 @@ export var createForm = () => {
   };
 
   var getValues: CreateFormReturnRecord['getValues'] = () => {
-    var fieldsEntries = Array(fieldsMap.size);
+    return Object_fromEntries(
+      Array.from(fieldsMap, (fieldEntry) => {
+        const fieldName = fieldEntry[0];
+        const field = fieldEntry[1];
 
-    var i = 0;
-    fieldsMap.forEach((field, key) => {
-      fieldsEntries[i++] = [key, field.getValue!()];
-    });
-
-    return Object_fromEntries(fieldsEntries);
+        return Array(fieldName, field.getValue());
+      })
+    );
   };
 
   var getDefaultValue: CreateFormReturnRecord['getDefaultValue'] = (
@@ -196,14 +192,11 @@ export var createForm = () => {
 
   var getRegisteredFields: CreateFormReturnRecord['getRegisteredFields'] =
     () => {
-      var fields = Array<Field>(fieldsMap.size);
+      return Array.from(fieldsMap, (fieldEntry) => {
+        const field = fieldEntry[1];
 
-      var i = 0;
-      fieldsMap.forEach((field) => {
-        fields[i++] = field;
+        return field;
       });
-
-      return fields;
     };
 
   var reset: CreateFormReturnRecord['reset'] = () => {
@@ -216,13 +209,18 @@ export var createForm = () => {
     const defaultFieldValue = defaultValuesMap.get(fieldName, false);
     const field = fieldsMap.get(fieldName, false);
 
-    if (defaultFieldValue == null || field == null) {
-      return () => {
-        return undefined;
-      };
-    }
-
-    return field.setValue(defaultFieldValue);
+    // prettier-ignore
+    return (
+      (defaultFieldValue == null || field == null)
+        ? (
+          () => {
+            return undefined;
+          }
+        )
+        : (
+          field.setValue(defaultFieldValue)
+        )
+    );
   };
 
   var submit: CreateFormReturnRecord['submit'] = (event) => {
@@ -242,6 +240,8 @@ export var createForm = () => {
 
     return submitter;
   };
+
+  // window.fieldsMap = fieldsMap;
 
   return returnValuesMap
     .set(FIELDS_MAP, fieldsMap)
