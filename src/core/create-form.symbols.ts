@@ -8,3 +8,5 @@ export var NULLABLE_FIELDS_MAP = Symbol('NULLABLE_FIELDS_MAP_SYMBOL');
 export var SUBMIT_QUEUE = Symbol(
   'SUBMIT_QUEUE_SYMBOL'
 ) as unknown as 'SUBMIT_QUEUE';
+
+export var RETURNED_VALUES_MAP = Symbol('RETURNED_VALUES_MAP_SYMBOL');

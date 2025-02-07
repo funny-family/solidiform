@@ -5,7 +5,7 @@ import type { SUBMIT_QUEUE } from './create-form.symbols';
 export type Field = {
   name: string;
   getValue: () => any;
-  setValue: Setter<any> | ((fieldValue: any) => any);
+  setValue: (predicate: (previousFieldValue: any) => any) => any;
   onBlur: () => void;
   onChange: (fieldValue: any) => void;
 };

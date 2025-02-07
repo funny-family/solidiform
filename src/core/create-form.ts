@@ -17,6 +17,7 @@ import {
   DEFAULT_VALUES_MAP,
   NULLABLE_FIELDS_MAP,
   SUBMIT_QUEUE,
+  RETURNED_VALUES_MAP,
 } from './create-form.symbols';
 import {
   nullableField_name,
@@ -32,6 +33,8 @@ export type CreateFormReturnRecord = {
   [DEFAULT_VALUES_MAP]: ReactiveMap<string, any>;
   // @ts-expect-error
   [NULLABLE_FIELDS_MAP]: Map<string, Field>;
+  // // @ts-expect-error
+  // [RETURNED_VALUES_MAP]: Map<string | symbol, any>;
   register: (fieldName: string, fieldValue: any) => Accessor<Field>;
   unregister: (
     this: {
@@ -42,8 +45,11 @@ export type CreateFormReturnRecord = {
       keepDefaultValue?: boolean;
     }
   ) => boolean;
-  setValue: (fieldName: string, fieldValue: any) => any;
-  getValue: (fieldName: string) => any;
+  setValue: (
+    fieldName: string,
+    predicate: (previousFieldValue: any) => any
+  ) => any;
+  getValue: (fieldName: string) => any | undefined;
   getValues: () => Record<string, any>;
   getDefaultValue: (fieldName: string) => any;
   getDefaultValues: () => Record<string, any>;
@@ -58,48 +64,60 @@ export var createForm = () => {
   var fieldsMap = new ReactiveMap<string, Field>();
   var nullableFieldsMap = new Map<string, Field>();
   var defaultValuesMap = new ReactiveMap<string, any>();
-  const returnValuesMap = new Map<string | symbol, any>();
+  const returnedValuesMap = new Map<string | symbol, any>();
 
   var register: CreateFormReturnRecord['register'] = (
     fieldName,
-    fieldValue
+    defaultFieldValue
   ) => {
-    var { 0: value, 1: setValue } = createSignal(fieldValue);
+    var { 0: fieldSignalValue, 1: setFieldSignalValue } =
+      createSignal(defaultFieldValue);
 
-    defaultValuesMap.set(fieldName, fieldValue);
+    defaultValuesMap.set(fieldName, defaultFieldValue);
 
-    var field = {
-      name: fieldName,
-      getValue: value,
-      setValue: (fieldValue: Setter<any>) => {
-        setValue(fieldValue);
+    const name: Field['name'] = fieldName;
+    const getValue: Field['getValue'] = fieldSignalValue;
+    const setValue: Field['setValue'] = (predicate) => {
+      const newFieldValue = predicate(fieldSignalValue());
 
-        return value;
-      },
-      onBlur: () => {
-        //
-      },
-      onChange: (fieldValue: any) => {
-        setValue(fieldValue);
-      },
+      return setFieldSignalValue(newFieldValue);
+    };
+    const onBlur: Field['onBlur'] = nullableField_onBlur;
+    const onChange: Field['onChange'] = (fieldValue) => {
+      setFieldSignalValue(fieldValue);
+    };
+    const field: Field = {
+      name,
+      getValue,
+      setValue,
+      onBlur,
+      onChange,
     };
 
     var map = fieldsMap.set(fieldName, field);
 
-    return createMemo(() => {
-      return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
-    });
+    // TODO: completely remove usage of "nullableFieldsMap" since it can be replaced with raw object
+    // See example below.
 
-    // return () => {
-    //   return (map.get(fieldName) || nullableFieldsMap.get(fieldName))!;
-    // };
+    return () => {
+      const nullableField = {
+        name: nullableField_name as any,
+        getValue: fieldSignalValue,
+        setValue: nullableField_setValue,
+        onBlur: nullableField_onBlur,
+        onChange: nullableField_onChange,
+      };
+
+      return map.get(fieldName) || nullableField;
+    };
   };
 
   var unregister: CreateFormReturnRecord['unregister'] = function (
     fieldName,
     option
   ) {
-    var keepDefaultValue = option?.keepDefaultValue || false;
+    var keepDefaultValue =
+      option?.keepDefaultValue == null ? false : option.keepDefaultValue;
 
     var field = fieldsMap.get(fieldName, false)!;
 
@@ -107,56 +125,32 @@ export var createForm = () => {
       return false;
     }
 
-    var defaultValue = defaultValuesMap.get(fieldName, false); // ??? (false)
-
-    var nullableField = {
-      name: nullableField_name as any,
-      getValue: () => {
-        return defaultValue;
-      },
-      setValue: nullableField_setValue,
-      onBlur: nullableField_onBlur,
-      onChange: nullableField_onChange,
-    };
-
-    if (keepDefaultValue) {
-      nullableFieldsMap.set(fieldName, nullableField);
-    } else {
-      nullableField.getValue = () => {
-        return field.getValue();
-      };
-
-      nullableFieldsMap.set(fieldName, nullableField);
-    }
+    var defaultFieldValue = defaultValuesMap.get(fieldName);
+    keepDefaultValue && field.setValue(defaultFieldValue);
 
     batch(() => {
       defaultValuesMap.delete(fieldName);
       fieldsMap.delete(fieldName);
-
-      var cleanup = this?.onCleanup;
-      if (cleanup != null) {
-        cleanup();
-      }
     });
-
-    nullableFieldsMap.delete(fieldName);
 
     return true;
   };
 
-  var setValue: CreateFormReturnRecord['setValue'] = (
-    fieldName,
-    fieldValue
-  ) => {
+  var setValue: CreateFormReturnRecord['setValue'] = (fieldName, predicate) => {
     var field = fieldsMap.get(fieldName);
+    var newFieldValue = predicate(field?.getValue());
 
-    if (field == null) {
-      return undefined;
-    }
-
-    var value = field.setValue(fieldValue);
-
-    return value();
+    // prettier-ignore
+    return (
+      (field == null)
+      ? (
+        undefined
+      ) : (
+        field.setValue(() => {
+          return newFieldValue
+        })
+      )
+    )
   };
 
   var getValue: CreateFormReturnRecord['getValue'] = (fieldName) => {
@@ -201,7 +195,9 @@ export var createForm = () => {
 
   var reset: CreateFormReturnRecord['reset'] = () => {
     fieldsMap.forEach((field, key) => {
-      field.setValue(defaultValuesMap.get(key));
+      field.setValue(() => {
+        return defaultValuesMap.get(key);
+      });
     });
   };
 
@@ -218,7 +214,9 @@ export var createForm = () => {
           }
         )
         : (
-          field.setValue(defaultFieldValue)
+          field.setValue(() => {
+            return defaultFieldValue
+          })
         )
     );
   };
@@ -243,20 +241,25 @@ export var createForm = () => {
 
   // window.fieldsMap = fieldsMap;
 
-  return returnValuesMap
-    .set(FIELDS_MAP, fieldsMap)
-    .set(DEFAULT_VALUES_MAP, defaultValuesMap)
-    .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
-    .set('setValue', setValue)
-    .set('getValue', getValue)
-    .set('getValues', getValues)
-    .set('getDefaultValue', getDefaultValue)
-    .set('getDefaultValues', getDefaultValues)
-    .set('getRegisteredField', getRegisteredField)
-    .set('getRegisteredFields', getRegisteredFields)
-    .set('register', register)
-    .set('unregister', unregister)
-    .set('reset', reset)
-    .set('resetField', resetField)
-    .set('submit', submit);
+  console.log(returnedValuesMap);
+
+  return (
+    returnedValuesMap
+      .set(FIELDS_MAP, fieldsMap)
+      .set(DEFAULT_VALUES_MAP, defaultValuesMap)
+      .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
+      // .set(RETURNED_VALUES_MAP, returnedValuesMap)
+      .set('setValue', setValue)
+      .set('getValue', getValue)
+      .set('getValues', getValues)
+      .set('getDefaultValue', getDefaultValue)
+      .set('getDefaultValues', getDefaultValues)
+      .set('getRegisteredField', getRegisteredField)
+      .set('getRegisteredFields', getRegisteredFields)
+      .set('register', register)
+      .set('unregister', unregister)
+      .set('reset', reset)
+      .set('resetField', resetField)
+      .set('submit', submit)
+  );
 };
