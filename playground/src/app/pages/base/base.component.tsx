@@ -4,6 +4,8 @@ import {
   transformReturnValue,
   type CreateFormReturnRecord,
 } from '../../../../../src';
+import { createEffect } from 'solid-js';
+import { MenuItem, Select } from '@suid/material';
 
 var useForm = () => {
   return transformReturnValue<CreateFormReturnRecord>(createForm());
@@ -21,14 +23,20 @@ export var Base = () => {
   var emailField = form.register('email', '');
   var budgetField = form.register('budget', '');
   var expertiseField = form.register('expertise', '');
+  var numberField = form.register('number', 0);
   var detailsField = form.register('details', '');
   var agreeField = form.register('agree', false);
 
   var onSubmit = async (event: Event) => {
     console.log({ event, ['form.getValues()']: form.getValues() });
 
-    alert('submitted yoooo ...');
+    // alert('submitted yoooo ...');
   };
+
+  createEffect(() => {
+    console.log('emailField():', emailField());
+    window.emailField = emailField;
+  });
 
   return (
     <div>
@@ -65,7 +73,6 @@ export var Base = () => {
                 emailField().onChange(event.target.value);
               }}
             />
-
             <button
               type="button"
               class="input__reset-button"
@@ -118,6 +125,34 @@ export var Base = () => {
               type="button"
               class="input__reset-button"
               data-reset-field-name={expertiseField().name}
+            >
+              x
+            </button>
+          </div>
+
+          <div class="input">
+            <Select
+              class="input__field"
+              label="Number"
+              defaultValue={form.getDefaultValue(numberField().name)}
+              value={numberField().getValue()}
+              name={numberField().name}
+              onBlur={() => {
+                numberField().onBlur();
+              }}
+              onChange={(event) => {
+                numberField().onChange(event.target.value);
+              }}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={30}>30</MenuItem>
+            </Select>
+
+            <button
+              type="button"
+              class="input__reset-button"
+              data-reset-field-name={numberField().name}
             >
               x
             </button>

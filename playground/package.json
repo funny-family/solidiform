@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@solidjs/router": "^0.14.3",
+    "@suid/material": "^0.18.0",
     "solid-js": "^1.8.11"
   }
 }

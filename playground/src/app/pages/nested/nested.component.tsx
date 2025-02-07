@@ -120,7 +120,7 @@ export var Nested = () => {
                       <label for="hshg6745">24/7 available</label>
                       <input
                         type="checkbox"
-                        id="hshg6745"?.
+                        id="hshg6745"
                         name={field['agree']().name}
                         checked={field['agree']().getValue()}
                         onBlur={() => {
