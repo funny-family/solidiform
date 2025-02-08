@@ -26,13 +26,17 @@ import {
   nullableField_setValue,
 } from './utils';
 
+export type FieldsMap = ReactiveMap<string, Field>;
+export type DefaultValuesMap = ReactiveMap<string, any>;
+export type NullableFieldsMap = ReactiveMap<string, any>;
+
 export type CreateFormReturnRecord = {
   // @ts-expect-error
-  [FIELDS_MAP]: ReactiveMap<string, Field>;
+  [FIELDS_MAP]: FieldsMap;
   // @ts-expect-error
-  [DEFAULT_VALUES_MAP]: ReactiveMap<string, any>;
+  [DEFAULT_VALUES_MAP]: DefaultValuesMap;
   // @ts-expect-error
-  [NULLABLE_FIELDS_MAP]: Map<string, Field>;
+  [NULLABLE_FIELDS_MAP]: NullableFieldsMap;
   // // @ts-expect-error
   // [RETURNED_VALUES_MAP]: Map<string | symbol, any>;
   register: (fieldName: string, fieldValue: any) => Accessor<Field>;
@@ -51,10 +55,6 @@ export type CreateFormReturnRecord = {
   ) => any;
   getValue: (fieldName: string) => any | undefined;
   getValues: () => Record<string, any>;
-  getDefaultValue: (fieldName: string) => any;
-  getDefaultValues: () => Record<string, any>;
-  getRegisteredField: (fieldName: string) => Field | undefined;
-  getRegisteredFields: () => Field[];
   reset: () => void;
   resetField: (fieldName: string) => any;
   submit: SubmitFunction;
@@ -168,32 +168,7 @@ export var createForm = () => {
     );
   };
 
-  var getDefaultValue: CreateFormReturnRecord['getDefaultValue'] = (
-    fieldName
-  ) => {
-    return defaultValuesMap.get(fieldName);
-  };
-
-  var getDefaultValues: CreateFormReturnRecord['getDefaultValues'] = () => {
-    return Object_fromEntries(defaultValuesMap);
-  };
-
-  var getRegisteredField: CreateFormReturnRecord['getRegisteredField'] = (
-    fieldName
-  ) => {
-    return fieldsMap.get(fieldName);
-  };
-
-  var getRegisteredFields: CreateFormReturnRecord['getRegisteredFields'] =
-    () => {
-      return Array.from(fieldsMap, (fieldEntry) => {
-        const field = fieldEntry[1];
-
-        return field;
-      });
-    };
-
-  var reset: CreateFormReturnRecord['reset'] = () => {
+  const reset: CreateFormReturnRecord['reset'] = () => {
     fieldsMap.forEach((field, key) => {
       field.setValue(() => {
         return defaultValuesMap.get(key);
@@ -201,7 +176,7 @@ export var createForm = () => {
     });
   };
 
-  var resetField: CreateFormReturnRecord['resetField'] = (fieldName) => {
+  const resetField: CreateFormReturnRecord['resetField'] = (fieldName) => {
     const defaultFieldValue = defaultValuesMap.get(fieldName, false);
     const field = fieldsMap.get(fieldName, false);
 
@@ -243,23 +218,16 @@ export var createForm = () => {
 
   console.log(returnedValuesMap);
 
-  return (
-    returnedValuesMap
-      .set(FIELDS_MAP, fieldsMap)
-      .set(DEFAULT_VALUES_MAP, defaultValuesMap)
-      .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
-      // .set(RETURNED_VALUES_MAP, returnedValuesMap)
-      .set('setValue', setValue)
-      .set('getValue', getValue)
-      .set('getValues', getValues)
-      .set('getDefaultValue', getDefaultValue)
-      .set('getDefaultValues', getDefaultValues)
-      .set('getRegisteredField', getRegisteredField)
-      .set('getRegisteredFields', getRegisteredFields)
-      .set('register', register)
-      .set('unregister', unregister)
-      .set('reset', reset)
-      .set('resetField', resetField)
-      .set('submit', submit)
-  );
+  return returnedValuesMap
+    .set(FIELDS_MAP, fieldsMap)
+    .set(DEFAULT_VALUES_MAP, defaultValuesMap)
+    .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
+    .set('setValue', setValue)
+    .set('getValue', getValue)
+    .set('getValues', getValues)
+    .set('register', register)
+    .set('unregister', unregister)
+    .set('reset', reset)
+    .set('resetField', resetField)
+    .set('submit', submit);
 };
