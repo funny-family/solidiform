@@ -54,7 +54,7 @@ export type CreateFormReturnRecord = {
     predicate: (previousFieldValue: any) => any
   ) => any;
   getValue: (fieldName: string) => any | undefined;
-  getValues: () => Record<string, any>;
+  getValuesRecord: () => Record<string, any>;
   reset: () => void;
   resetField: (fieldName: string) => any;
   submit: SubmitFunction;
@@ -66,7 +66,7 @@ export var createForm = () => {
   var defaultValuesMap = new ReactiveMap<string, any>();
   const returnedValuesMap = new Map<string | symbol, any>();
 
-  var register: CreateFormReturnRecord['register'] = (
+  const register: CreateFormReturnRecord['register'] = (
     fieldName,
     defaultFieldValue
   ) => {
@@ -112,7 +112,7 @@ export var createForm = () => {
     };
   };
 
-  var unregister: CreateFormReturnRecord['unregister'] = function (
+  const unregister: CreateFormReturnRecord['unregister'] = function (
     fieldName,
     option
   ) {
@@ -136,7 +136,10 @@ export var createForm = () => {
     return true;
   };
 
-  var setValue: CreateFormReturnRecord['setValue'] = (fieldName, predicate) => {
+  const setValue: CreateFormReturnRecord['setValue'] = (
+    fieldName,
+    predicate
+  ) => {
     var field = fieldsMap.get(fieldName);
     var newFieldValue = predicate(field?.getValue());
 
@@ -153,11 +156,11 @@ export var createForm = () => {
     )
   };
 
-  var getValue: CreateFormReturnRecord['getValue'] = (fieldName) => {
+  const getValue: CreateFormReturnRecord['getValue'] = (fieldName) => {
     return fieldsMap.get(fieldName)?.getValue();
   };
 
-  var getValues: CreateFormReturnRecord['getValues'] = () => {
+  const getValuesRecord: CreateFormReturnRecord['getValuesRecord'] = () => {
     return Object_fromEntries(
       Array.from(fieldsMap, (fieldEntry) => {
         const fieldName = fieldEntry[0];
@@ -196,7 +199,7 @@ export var createForm = () => {
     );
   };
 
-  var submit: CreateFormReturnRecord['submit'] = (event) => {
+  const submit: CreateFormReturnRecord['submit'] = (event) => {
     event.preventDefault();
 
     var queue = new Set<Promise<any>>();
@@ -224,7 +227,7 @@ export var createForm = () => {
     .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
     .set('setValue', setValue)
     .set('getValue', getValue)
-    .set('getValues', getValues)
+    .set('getValuesRecord', getValuesRecord)
     .set('register', register)
     .set('unregister', unregister)
     .set('reset', reset)
