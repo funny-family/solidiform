@@ -1,23 +1,19 @@
-import {
-  type Accessor,
-  batch,
-  createMemo,
-  createSignal,
-  type Setter,
-} from 'solid-js';
+import { batch, createSignal } from 'solid-js';
 import { ReactiveMap } from '../utils/reactive-map.util';
 import { Object_fromEntries } from '../utils/object.util';
 import type {
   Field,
-  SubmitFunction,
   SubmitterFunction,
+  FieldsMap,
+  DefaultValuesMap,
+  PromiseQueue,
+  CreateFormReturnRecord,
+  ReturnedValuesMap,
 } from './create-form.types';
 import {
   FIELDS_MAP,
   DEFAULT_VALUES_MAP,
-  NULLABLE_FIELDS_MAP,
   SUBMIT_QUEUE,
-  RETURNED_VALUES_MAP,
 } from './create-form.symbols';
 import {
   nullableField_name,
@@ -26,45 +22,10 @@ import {
   nullableField_setValue,
 } from './utils';
 
-export type FieldsMap = ReactiveMap<string, Field>;
-export type DefaultValuesMap = ReactiveMap<string, any>;
-export type NullableFieldsMap = ReactiveMap<string, any>;
-
-export type CreateFormReturnRecord = {
-  // @ts-expect-error
-  [FIELDS_MAP]: FieldsMap;
-  // @ts-expect-error
-  [DEFAULT_VALUES_MAP]: DefaultValuesMap;
-  // @ts-expect-error
-  [NULLABLE_FIELDS_MAP]: NullableFieldsMap;
-  // // @ts-expect-error
-  // [RETURNED_VALUES_MAP]: Map<string | symbol, any>;
-  register: (fieldName: string, fieldValue: any) => Accessor<Field>;
-  unregister: (
-    this: {
-      onCleanup?: () => void;
-    },
-    fieldName: string,
-    option?: {
-      keepDefaultValue?: boolean;
-    }
-  ) => boolean;
-  setValue: (
-    fieldName: string,
-    predicate: (previousFieldValue: any) => any
-  ) => any;
-  getValue: (fieldName: string) => any | undefined;
-  getValuesRecord: () => Record<string, any>;
-  reset: () => void;
-  resetField: (fieldName: string) => any;
-  submit: SubmitFunction;
-};
-
 export var createForm = () => {
-  var fieldsMap = new ReactiveMap<string, Field>();
-  var nullableFieldsMap = new Map<string, Field>();
-  var defaultValuesMap = new ReactiveMap<string, any>();
-  const returnedValuesMap = new Map<string | symbol, any>();
+  var fieldsMap: FieldsMap = new ReactiveMap();
+  var defaultValuesMap: DefaultValuesMap = new ReactiveMap();
+  const returnedValuesMap: ReturnedValuesMap = new Map();
 
   const register: CreateFormReturnRecord['register'] = (
     fieldName,
@@ -96,26 +57,28 @@ export var createForm = () => {
 
     var map = fieldsMap.set(fieldName, field);
 
-    // TODO: completely remove usage of "nullableFieldsMap" since it can be replaced with raw object
-    // See example below.
-
     return () => {
+      const name = nullableField_name as any;
+      const getValue = fieldSignalValue;
+      const setValue = nullableField_setValue;
+      const onBlur = nullableField_onBlur;
+      const onChange = nullableField_onChange;
       const nullableField = {
-        name: nullableField_name as any,
-        getValue: fieldSignalValue,
-        setValue: nullableField_setValue,
-        onBlur: nullableField_onBlur,
-        onChange: nullableField_onChange,
+        name,
+        getValue,
+        setValue,
+        onBlur,
+        onChange,
       };
 
       return map.get(fieldName) || nullableField;
     };
   };
 
-  const unregister: CreateFormReturnRecord['unregister'] = function (
+  const unregister: CreateFormReturnRecord['unregister'] = (
     fieldName,
     option
-  ) {
+  ) => {
     var keepDefaultValue =
       option?.keepDefaultValue == null ? false : option.keepDefaultValue;
 
@@ -125,8 +88,11 @@ export var createForm = () => {
       return false;
     }
 
-    var defaultFieldValue = defaultValuesMap.get(fieldName);
-    keepDefaultValue && field.setValue(defaultFieldValue);
+    const defaultFieldValue = defaultValuesMap.get(fieldName);
+    keepDefaultValue &&
+      field.setValue(() => {
+        return defaultFieldValue;
+      });
 
     batch(() => {
       defaultValuesMap.delete(fieldName);
@@ -202,7 +168,7 @@ export var createForm = () => {
   const submit: CreateFormReturnRecord['submit'] = (event) => {
     event.preventDefault();
 
-    var queue = new Set<Promise<any>>();
+    var queue: PromiseQueue = new Set();
 
     var submitter: SubmitterFunction = async (onSubmit) => {
       if (queue.size > 0) {
@@ -217,14 +183,9 @@ export var createForm = () => {
     return submitter;
   };
 
-  // window.fieldsMap = fieldsMap;
-
-  console.log(returnedValuesMap);
-
   return returnedValuesMap
     .set(FIELDS_MAP, fieldsMap)
     .set(DEFAULT_VALUES_MAP, defaultValuesMap)
-    .set(NULLABLE_FIELDS_MAP, nullableFieldsMap)
     .set('setValue', setValue)
     .set('getValue', getValue)
     .set('getValuesRecord', getValuesRecord)

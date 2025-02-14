@@ -1,3 +1,5 @@
 export { createForm } from './core/create-form';
 export { transformReturnValue } from './core/transform-return-value';
-export * from './core/create-form';
+export { FIELDS_MAP, DEFAULT_VALUES_MAP } from './core/create-form.symbols';
+
+export * from './core/create-form.types';
