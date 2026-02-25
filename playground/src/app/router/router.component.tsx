@@ -15,11 +15,13 @@ export var routes = [
   {
     path: '/base',
     component: lazy(() => {
-      return import('@src/app/pages/base/base.component').then((module) => {
-        return {
-          default: module.Base,
-        };
-      });
+      return import('@src/app/pages/base/base.component');
+    }),
+  },
+  {
+    path: '/with-state',
+    component: lazy(() => {
+      return import('@src/app/pages/state/state.component');
     }),
   },
   {

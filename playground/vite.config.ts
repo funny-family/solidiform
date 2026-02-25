@@ -10,6 +10,11 @@ var resolvePath = (p: string) => {
 };
 
 export default defineConfig({
+  optimizeDeps: {
+    // https://github.com/solidjs/solid-router/issues/165
+    // this remove react is not defined
+    disabled: true,
+  },
   base: './',
   plugins: [
     inspect(),

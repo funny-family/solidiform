@@ -10,6 +10,9 @@ export var Index: Component<ParentProps> = (props) => {
           <A href="/base">base</A>
         </li>
         <li>
+          <A href="/with-state">with-state</A>
+        </li>
+        <li>
           <A href="/nested">nested</A>
         </li>
       </ul>

@@ -171,12 +171,30 @@ export var createForm = () => {
     var queue: PromiseQueue = new Set();
 
     var submitter: SubmitterFunction = async (onSubmit) => {
+      // try {
+      //   if (queue.size > 0) {
+      //     await Promise.all(Array.from(queue).toReversed());
+      //   }
+
+      //   await onSubmit(event);
+      // } catch (error) {
+      //   console.log(3333, { error });
+      // }
+
       if (queue.size > 0) {
         await Promise.all(Array.from(queue).toReversed());
       }
 
       await onSubmit(event);
     };
+
+    // var submitter: SubmitterFunction = async (onSubmit) => {
+    //   await Promise.all(Array.from(queue).toReversed());
+
+    //   return await onSubmit(event).catch((ee) => {
+    //     console.log({ ee });
+    //   });
+    // };
 
     submitter[SUBMIT_QUEUE] = queue;
 

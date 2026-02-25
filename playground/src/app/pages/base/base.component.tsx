@@ -1,21 +1,35 @@
 import './base.styles.css';
+import { createEffect } from 'solid-js';
+import { MenuItem, Select } from '@suid/material';
 import {
   createForm,
   transformReturnValue,
   type CreateFormReturnRecord,
 } from '../../../../../src';
-import { createEffect } from 'solid-js';
-import { MenuItem, Select } from '@suid/material';
+import {
+  type WithRegisteredReturnRecord,
+  withRegistered,
+} from '../../../../../src/plugins/with-registered';
+import {
+  type WithDefaultValueGetterReturnRecord,
+  withDefaultValueGetter,
+} from '../../../../../src/plugins/with-default-value-getter';
 
 var useForm = () => {
-  return transformReturnValue<CreateFormReturnRecord>(createForm());
+  type Form = CreateFormReturnRecord &
+    WithRegisteredReturnRecord &
+    WithDefaultValueGetterReturnRecord;
+
+  return transformReturnValue<Form>(
+    withDefaultValueGetter(withRegistered(createForm()))
+  );
 };
 
 var FormData = (props: { record: Record<string, any> }) => {
   return <pre>{JSON.stringify(props.record, null, 2)}</pre>;
 };
 
-export var Base = () => {
+export default () => {
   var form = useForm();
   // @ts-expect-error
   console.log((window.form = form));
@@ -28,13 +42,14 @@ export var Base = () => {
   var agreeField = form.register('agree', false);
 
   var onSubmit = async (event: Event) => {
-    console.log({ event, ['form.getValues()']: form.getValues() });
+    console.log({ event, ['form.getValuesRecord()']: form.getValuesRecord() });
 
     // alert('submitted yoooo ...');
   };
 
   createEffect(() => {
     console.log('emailField():', emailField());
+    // @ts-expect-error
     window.emailField = emailField;
   });
 
@@ -216,7 +231,7 @@ export var Base = () => {
 
       <hr />
 
-      <FormData record={form.getValues()} />
+      <FormData record={form.getValuesRecord()} />
     </div>
   );
 };
